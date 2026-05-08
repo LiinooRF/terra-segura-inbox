@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import type { Conversacion } from "@/types";
 import { cn, formatPhone, formatTime } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
+import SidebarHeader from "./SidebarHeader";
 
 interface Props {
   selectedId: string | null;
@@ -89,14 +90,8 @@ export default function ConversationList({
 
   return (
     <div className="flex flex-col h-full bg-wa-dark border-r border-wa-border">
-      <div className="p-3">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-white font-bold text-lg">Terra Segura</h1>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-wa-header text-gray-300">
-            {rol === "admin" ? "Admin" : "Agente"}
-          </span>
-        </div>
-
+      <SidebarHeader />
+      <div className="p-3 border-b border-wa-border">
         <input
           type="text"
           placeholder="Buscar conversación..."
