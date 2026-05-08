@@ -62,15 +62,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Si admin responde a conversación IA, auto-asignarse
+    // Round-robin: si admin responde a conversación IA, asignar al siguiente agente
     if (session.rol === "admin" && conv.estado === "ia_activa") {
+      const { data: agentesData } = await supabase
+        .from("agentes")
+        .select("id,nombre")
+        .eq("activo", true)
+        .eq("rol", "agente")
+        .order("ultimo_turno", { ascending: true, nullsFirst: true })
+        .limit(1);
+
+      const agenteAsignado = agentesData?.[0] || session;
+
       await supabase
         .from("conversaciones")
         .update({
-          id_agente: session.id,
+          id_agente: agenteAsignado.id,
           estado: "asignada",
         })
         .eq("id", conv.id);
+
+      await supabase
+        .from("agentes")
+        .update({ ultimo_turno: new Date().toISOString() })
+        .eq("id", agenteAsignado.id);
+
+      // Guardar mensaje de sistema: conversación asignada
+      await supabase.from("mensajes").insert({
+        id_conversacion,
+        texto: `Conversación asignada a ${agenteAsignado.nombre}`,
+        enviado_por: "ia",
+      });
     }
 
     // Insertar mensaje
