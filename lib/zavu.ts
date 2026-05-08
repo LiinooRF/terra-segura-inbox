@@ -3,14 +3,17 @@
 // Por ahora usamos fetch directo a la API REST de Zavu
 
 const ZAVU_API = "https://api.zavudev.com/v1";
-const API_KEY = process.env.ZAVUDEV_API_KEY!;
+
+function getApiKey(): string {
+  return process.env.ZAVUDEV_API_KEY || "";
+}
 
 export async function sendWhatsAppMessage(to: string, text: string) {
   const res = await fetch(`${ZAVU_API}/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${getApiKey()}`,
     },
     body: JSON.stringify({
       to,
