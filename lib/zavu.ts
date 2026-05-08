@@ -2,7 +2,7 @@
 // Para usar en producción, instala: npm add @zavudev/sdk
 // Por ahora usamos fetch directo a la API REST de Zavu
 
-const ZAVU_API = "https://api.zavudev.com/v1";
+const ZAVU_API = "https://api.zavu.dev/v1";
 
 function getApiKey(): string {
   return process.env.ZAVUDEV_API_KEY || "";
