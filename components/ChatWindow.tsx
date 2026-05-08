@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import type { Mensaje, Conversacion } from "@/types";
 import { formatPhone, formatDate } from "@/lib/utils";
@@ -24,18 +24,27 @@ export default function ChatWindow({ conversacionId, agenteId, agenteRol }: Prop
   const [conversacion, setConversacion] = useState<Conversacion | null>(null);
   const [sending, setSending] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Cargar mensajes
   useEffect(() => {
-    if (!conversacionId) { setMensajes([]); setConversacion(null); return; }
+    if (!conversacionId) { setMensajes([]); setConversacion(null); setLoading(false); return; }
+    setLoading(true);
+    setLoadError("");
     async function load() {
-      const { data: convData } = await supabase.from("conversaciones").select("*").eq("id", conversacionId).single();
+      const { data: convData, error: convErr } = await supabase.from("conversaciones").select("*").eq("id", conversacionId).single();
+      if (convErr) { setLoadError("Error al cargar conversación: " + convErr.message); setLoading(false); return; }
       if (convData) setConversacion(convData);
-      const { data: msgsData } = await supabase.from("mensajes").select("*").eq("id_conversacion", conversacionId).order("created_at", { ascending: true });
+
+      const { data: msgsData, error: msgsErr } = await supabase.from("mensajes").select("*").eq("id_conversacion", conversacionId).order("created_at", { ascending: true });
+      if (msgsErr) { setLoadError("Error al cargar mensajes: " + msgsErr.message); setLoading(false); return; }
       if (msgsData) setMensajes(msgsData);
+
       await supabase.from("mensajes").update({ leido: true }).eq("id_conversacion", conversacionId).eq("enviado_por", "cliente").eq("leido", false);
+      setLoading(false);
     }
     load();
   }, [conversacionId, supabase]);
@@ -137,7 +146,24 @@ export default function ChatWindow({ conversacionId, agenteId, agenteRol }: Prop
     } catch {} finally { setToggling(false); }
   }
 
-  if (!conversacionId || !conversacion) return null;
+  if (!conversacionId) return null;
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col h-full bg-[#0B141A] items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-wa-green-light border-t-transparent rounded-full mb-4" />
+        <p className="text-gray-400 text-sm">Cargando conversación...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !conversacion) {
+    return (
+      <div className="flex-1 flex flex-col h-full bg-[#0B141A] items-center justify-center">
+        <p className="text-red-400 text-sm">{loadError || "Conversación no encontrada"}</p>
+      </div>
+    );
+  }
 
   const isOwnMessage = (msg: Mensaje) => msg.enviado_por === "agente" && msg.id_agente === agenteId;
 
