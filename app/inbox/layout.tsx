@@ -1,54 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import type { AuthPayload } from "@/types";
+import { usePathname, useRouter } from "next/navigation";
 import ConversationList from "@/components/ConversationList";
-import EmptyState from "@/components/EmptyState";
+import { useAuth, AuthProvider } from "@/components/AuthProvider";
 
-export default function InboxLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function InboxContent({ children }: { children: React.ReactNode }) {
+  const agente = useAuth()!;
+  const pathname = usePathname();
   const router = useRouter();
-  const [agente, setAgente] = useState<AuthPayload | null>(null);
 
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) {
-          router.push("/login");
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setAgente(data);
-      });
-  }, [router]);
-
-  if (!agente) {
-    return (
-      <div className="h-screen bg-wa-darker flex items-center justify-center">
-        <p className="text-gray-400">Cargando...</p>
-      </div>
-    );
-  }
+  const segments = pathname.split("/").filter(Boolean);
+  const selectedId = segments.length > 1 ? segments[1] : null;
 
   return (
     <div className="h-screen flex">
       <div className="w-[380px] flex-shrink-0">
         <ConversationList
-          selectedId={null}
+          selectedId={selectedId}
           onSelect={(id) => router.push(`/inbox/${id}`)}
           agenteId={agente.id}
           rol={agente.rol}
         />
       </div>
       <div className="flex-1 flex">
-        <EmptyState />
+        {children}
       </div>
     </div>
+  );
+}
+
+export default function InboxLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <InboxContent>{children}</InboxContent>
+    </AuthProvider>
   );
 }
