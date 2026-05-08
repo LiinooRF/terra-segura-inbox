@@ -28,14 +28,16 @@ export function formatDate(isoString: string): string {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) {
-    return "Hoy";
-  }
-  if (date.toDateString() === yesterday.toDateString()) {
-    return "Ayer";
+  if (date.toDateString() === today.toDateString()) return "Hoy";
+  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  if (date >= weekAgo) {
+    return date.toLocaleDateString("es-MX", { weekday: "long" });
   }
   return date.toLocaleDateString("es-MX", {
     day: "numeric",
-    month: "short",
+    month: "long",
   });
 }
