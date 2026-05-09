@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       nombre: agente.nombre,
       email: agente.email,
       rol: agente.rol,
+      token,
     });
 
     await setSessionCookie(token);
