@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyToken } from "@/lib/auth";
 
 const BASE_URL = "https://inbox.linorequena.xyz";
 
@@ -22,10 +23,18 @@ export async function GET(
     return NextResponse.redirect(`${BASE_URL}/login`);
   }
 
-  // Redirigir a inbox con cookie seteada
-  const res = NextResponse.redirect(`${BASE_URL}/inbox`);
+  // Decodificar el JWT para pasar datos del usuario en la URL
+  // Así el cliente no necesita cookies para saber quién es
+  const payload = await verifyToken(data.token);
+  const userParams = payload
+    ? `&nombre=${encodeURIComponent(payload.nombre)}&rol=${payload.rol}&uid=${payload.id}`
+    : "";
 
-  // Setear la cookie
+  const res = NextResponse.redirect(
+    `${BASE_URL}/inbox?code=${params.code}${userParams}`
+  );
+
+  // Cookie por si el navegador la acepta
   res.cookies.set("terra_token", data.token, {
     httpOnly: true,
     secure: true,

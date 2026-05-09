@@ -28,7 +28,7 @@ export default function SidebarHeader() {
             {agente.nombre}
           </p>
           <p className="text-gray-500 text-[11px] truncate max-w-[180px]">
-            {agente.email}
+            {agente.email || `ID: ${agente.id.slice(0, 8)}...`}
           </p>
         </div>
         <div className="flex items-center gap-1">

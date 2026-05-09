@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ConversationList from "@/components/ConversationList";
 import { useAuth, AuthProvider } from "@/components/AuthProvider";
@@ -31,8 +32,10 @@ function InboxContent({ children }: { children: React.ReactNode }) {
 
 export default function InboxLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <InboxContent>{children}</InboxContent>
-    </AuthProvider>
+    <Suspense fallback={<div className="h-screen bg-wa-darker flex items-center justify-center"><p className="text-gray-400">Cargando...</p></div>}>
+      <AuthProvider>
+        <InboxContent>{children}</InboxContent>
+      </AuthProvider>
+    </Suspense>
   );
 }
