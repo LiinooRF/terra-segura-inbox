@@ -18,16 +18,14 @@ export async function GET(
     .eq("code", params.code)
     .single();
 
-  if (error || !data) {
+  if (error || !data || new Date(data.expires_at) < new Date()) {
     return NextResponse.redirect(`${BASE_URL}/login`);
   }
 
-  if (new Date(data.expires_at) < new Date()) {
-    await supabase.from("session_codes").delete().eq("code", params.code);
-    return NextResponse.redirect(`${BASE_URL}/login`);
-  }
-
+  // Redirigir a inbox con cookie seteada
   const res = NextResponse.redirect(`${BASE_URL}/inbox`);
+
+  // Setear la cookie
   res.cookies.set("terra_token", data.token, {
     httpOnly: true,
     secure: true,
@@ -35,5 +33,6 @@ export async function GET(
     path: "/",
     maxAge: 60 * 60 * 24,
   });
+
   return res;
 }
