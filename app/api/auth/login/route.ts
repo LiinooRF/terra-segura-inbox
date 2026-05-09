@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { signToken, setSessionCookie } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 function getSupabase() {
   return createClient(
@@ -53,12 +54,22 @@ export async function POST(req: NextRequest) {
       rol: agente.rol,
     });
 
+    // Generar código corto para iframe
+    const code = crypto.randomBytes(4).toString("hex");
+    await supabase.from("session_codes").insert({
+      code,
+      token,
+      agent_id: agente.id,
+      expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+    });
+
     const res = NextResponse.json({
       id: agente.id,
       nombre: agente.nombre,
       email: agente.email,
       rol: agente.rol,
       token,
+      code,
     });
 
     await setSessionCookie(token);
