@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const BASE_URL = "https://inbox.linorequena.xyz";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { code: string } }
@@ -17,15 +19,15 @@ export async function GET(
     .single();
 
   if (error || !data) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(`${BASE_URL}/login`);
   }
 
   if (new Date(data.expires_at) < new Date()) {
     await supabase.from("session_codes").delete().eq("code", params.code);
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(`${BASE_URL}/login`);
   }
 
-  const res = NextResponse.redirect(new URL("/inbox", req.url));
+  const res = NextResponse.redirect(`${BASE_URL}/inbox`);
   res.cookies.set("terra_token", data.token, {
     httpOnly: true,
     secure: true,
